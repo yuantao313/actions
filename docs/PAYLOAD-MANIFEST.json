@@ -1,33 +1,33 @@
 [
   {
     "path": ".gitattributes",
-    "bytes": 20,
-    "sha256": "d711b6ba64c7208f3059111e2a74a2453348584bef1fec237198ad08befe28b9"
+    "bytes": 19,
+    "sha256": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c"
   },
   {
     "path": ".github/workflows/ci.yml",
-    "bytes": 723,
-    "sha256": "d809890438499f875a8177c5a838e431b4bca326d1e5d3e76baddff48c98c20e"
+    "bytes": 700,
+    "sha256": "1c335dda84542191f707f735f9fda3138b6724dda33d04c3755fe208d6f15329"
   },
   {
     "path": ".gitignore",
-    "bytes": 49,
-    "sha256": "5e6fd35970992c0c5ee625a5897286a836c58c8d7d9553fae62ffae82e73644e"
+    "bytes": 45,
+    "sha256": "23a2c3c02b184e6ce4aa5ba65acced7a84a0359c9ccdd18db0e4c81e4a941b91"
   },
   {
     "path": "_lib/atomgit_api.py",
-    "bytes": 3246,
-    "sha256": "8ca915de911d47bb168229ebcd2275c2723e000ffced1c3e12e94b4797148429"
+    "bytes": 3179,
+    "sha256": "e57e552152daa02408759514235eddd8296585eaa2621d54a8378f96c3c87ff3"
   },
   {
     "path": "_lib/operations.py",
-    "bytes": 12347,
-    "sha256": "886b6f2903347813215cbd72f5d2923f180519c2007bbcc59042c36e6c6434f4"
+    "bytes": 12098,
+    "sha256": "a45b381612179993866daf4887ee2aaa1794ca3021cb99e416fb51eb85d8df52"
   },
   {
     "path": "atomgit-api/action.yml",
-    "bytes": 1013,
-    "sha256": "0d5ef98366ffc8fe5a064489013ed81567de73eb47dbcd968aa8a6cdad9cece0"
+    "bytes": 979,
+    "sha256": "7e5301ec5eb0f5018b5cca452ee6c7d4cf3233094a9137e9f32078e863216f0b"
   },
   {
     "path": "atomgit-checkout-pr/action.yml",
@@ -36,13 +36,13 @@
   },
   {
     "path": "atomgit-issue-comment/action.yml",
-    "bytes": 1279,
-    "sha256": "f4347b541417b29d75b4854f7c2f0cb0b82f21bcfcbe3b15b54bf84b53bef4d5"
+    "bytes": 1238,
+    "sha256": "989df360c302f4b428c948a473a78020d03c61484806eaad547a1075a2d8b1f1"
   },
   {
     "path": "atomgit-issue-context/action.yml",
-    "bytes": 2346,
-    "sha256": "d70ab26d0db53bbec25f4789710a7c97bad8aee0d5a374b7036570232d142520"
+    "bytes": 2279,
+    "sha256": "65420ebde76cdade41d825ab7c06810df41534f7a232b36c61dd1ebc1bf3b7ec"
   },
   {
     "path": "atomgit-issue-context/prompt.md",
@@ -51,33 +51,33 @@
   },
   {
     "path": "atomgit-pr-metadata/action.yml",
-    "bytes": 913,
-    "sha256": "0751ffe4d2dc3683043a003efb0e91b04796e553466d5addd78cf98953c7106b"
+    "bytes": 880,
+    "sha256": "b89b9892a948986987e1e88a1b857513c67f02420b176692996a242332561c5d"
   },
   {
     "path": "atomgit-pr-status/action.yml",
-    "bytes": 1615,
-    "sha256": "56f6bdd0fbe4d8218a87aafe12ac8fd3b9bafd935dd2b7301064e49fe05a02a0"
+    "bytes": 1560,
+    "sha256": "9eea6ce971fa406e041535ec24d76de35e4ed00c2155170285128265e80fb9bd"
   },
   {
     "path": "atomgit-release/action.yml",
-    "bytes": 1207,
-    "sha256": "c330dcc58f153f68b54e4f16422fa39e6abc5f1aa2e5f82c1ddee799d888b714"
+    "bytes": 1165,
+    "sha256": "ff11754d86b83e38a152685ee00b08dec34d70187677c9fc61a409a03e895987"
   },
   {
     "path": "docs/CATALOG.md",
-    "bytes": 2967,
-    "sha256": "3300cdcde770e5f00be92412efeb9a843b9f4cb5cf80c41539d0055edca23bf3"
+    "bytes": 2933,
+    "sha256": "da9521f66d827768fa951aeba1ff9cf5593a3695a539abe91f4d428e26297ea8"
   },
   {
     "path": "docs/MIGRATION.md",
-    "bytes": 2819,
-    "sha256": "13c361358adfcacb0b7bef426b2c9b134f94fb6612dc4775e72f1aae40119a77"
+    "bytes": 2766,
+    "sha256": "09e8bf2c3a39383a8288855a69a3814dd724316aa586fd6a5e1f77c8fb148daa"
   },
   {
     "path": "install-python-requirements/action.yml",
-    "bytes": 578,
-    "sha256": "acec3025e1242baa81b1801e4533e7eb271ef912e9945f3e05b80ab95ea41761"
+    "bytes": 561,
+    "sha256": "98b1ffc387167aee217a2acbcaca4672d435d8967d9603c73dc8af2dabd609b5"
   },
   {
     "path": "install-python-requirements/install.py",
@@ -86,8 +86,8 @@
   },
   {
     "path": "README.md",
-    "bytes": 4879,
-    "sha256": "d33f12fa4a39e62eb8436de1a4f541623f6f2e6ab612772ebc891fb41744430a"
+    "bytes": 4777,
+    "sha256": "45567cf09c5cce18dab1bcedd7a8a82e5d49234205f0f37dac6c7c7bc5acc592"
   },
   {
     "path": "setup-traecn/action.yml",
@@ -96,13 +96,13 @@
   },
   {
     "path": "tests/test_atomgit_api.py",
-    "bytes": 2333,
-    "sha256": "5f6b3d1b77dab1f509f974f9ccc47d15b184fa58dba56e675607863f83147ce0"
+    "bytes": 2288,
+    "sha256": "27a71d3b0bd1f2ac3c14fe2d021577b00eee66d90c2b7eaa44ecd6aff1c99274"
   },
   {
     "path": "tests/test_catalog.py",
-    "bytes": 2143,
-    "sha256": "c0ffd72c2c69b447d880aaf53fbdb70c3c1d37bdef93fea9092afdf11af4f828"
+    "bytes": 2096,
+    "sha256": "a56f549a5fd9dd6168b69261a8f10b5d4229a78af0a877296940093020064d8c"
   },
   {
     "path": "tests/test_checkout_pr.py",
@@ -126,13 +126,13 @@
   },
   {
     "path": "tests/test_trust_checkout.sh",
-    "bytes": 1836,
-    "sha256": "9642ea5abce43076a16445ba8bc900c4c99c77c6fc4c55f91f74abde0ee90dc4"
+    "bytes": 1796,
+    "sha256": "24f3cb5f228b2b1d7b24d50ca5c1e57d2009db73d0b9455906c5ec0d47fbae25"
   },
   {
     "path": "traecn/action.yml",
-    "bytes": 9657,
-    "sha256": "adc5a17b81ec2d711e5b45e5605dbeb0878f602c86fbc11c777dca3839c0261f"
+    "bytes": 9461,
+    "sha256": "597d12ad4a1c89a15559f26ba0b46d40aecea397ea19057d0041f00de8bb8e14"
   },
   {
     "path": "trust-checkout/action.yml",
