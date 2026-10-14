@@ -1,0 +1,54 @@
+name: Checkout and merge AtomGit PR
+description: Merge an exact PR head into the target revision fetched by this job
+inputs:
+  repository:
+    description: AtomGit owner/repository
+    required: true
+  pr-number:
+    description: Positive PR number
+    required: true
+  base-ref:
+    description: Target branch from atomgit-pr-metadata
+    required: true
+  head-sha:
+    description: Exact PR head SHA from atomgit-pr-metadata
+    required: true
+  worktree:
+    description: Fresh checkout path inside GITHUB_WORKSPACE
+    default: _pr-source
+outputs:
+  worktree:
+    description: Merged source directory
+    value: ${{ steps.merge.outputs.worktree }}
+  base-sha:
+    description: Target SHA fetched by this job
+    value: ${{ steps.merge.outputs.base-sha }}
+  head-sha:
+    description: Verified PR head
+    value: ${{ steps.merge.outputs.head-sha }}
+runs:
+  using: composite
+  steps:
+    - id: merge
+      shell: bash
+      env:
+        PR_REPOSITORY: ${{ inputs.repository }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        BASE_REF: ${{ inputs.base-ref }}
+        HEAD_SHA: ${{ inputs.head-sha }}
+        WORKTREE: ${{ inputs.worktree }}
+      run: |
+        set -euo pipefail
+        [[ "$PR_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ && "$PR_NUMBER" =~ ^[1-9][0-9]*$ && "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo 'Invalid PR inputs' >&2; exit 1; }
+        git check-ref-format --branch "$BASE_REF" >/dev/null
+        workspace=$(realpath -e "$GITHUB_WORKSPACE")
+        worktree=$(realpath -m "$WORKTREE")
+        [[ "$worktree" == "$workspace/"* && ! -e "$worktree" ]] || { echo 'Fresh worktree inside workspace required' >&2; exit 1; }
+        git clone --no-tags --single-branch --branch "$BASE_REF" "https://atomgit.com/$PR_REPOSITORY.git" "$worktree"
+        base_sha=$(git -C "$worktree" rev-parse HEAD)
+        echo "base-sha=$base_sha" >> "$GITHUB_OUTPUT"
+        git -C "$worktree" fetch --no-tags origin "+refs/merge-requests/$PR_NUMBER/head:refs/remotes/origin/pr-head"
+        fetched=$(git -C "$worktree" rev-parse refs/remotes/origin/pr-head)
+        [[ "$fetched" == "$HEAD_SHA" ]] || { echo 'PR changed; start a new run' >&2; exit 1; }
+        git -C "$worktree" -c user.name=ci -c user.email=ci@example.invalid merge --no-edit "$HEAD_SHA"
+        printf 'worktree=%s\nhead-sha=%s\n' "$worktree" "$HEAD_SHA" >> "$GITHUB_OUTPUT"

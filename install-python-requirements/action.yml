@@ -1,0 +1,17 @@
+name: Install Python requirements
+description: Install repository requirements while optionally excluding direct package lines
+inputs:
+  requirements-file:
+    description: Requirements file path
+    required: true
+  exclude-packages:
+    description: Comma-separated direct package names to exclude; empty excludes nothing
+    default: ''
+runs:
+  using: composite
+  steps:
+  - shell: bash
+    env:
+      REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
+      EXCLUDE_PACKAGES: ${{ inputs.exclude-packages }}
+    run: python3 "$GITHUB_ACTION_PATH/install.py"

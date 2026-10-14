@@ -1,0 +1,196 @@
+name: TRAE CN
+description: Direct official TRAE CN CLI execution with stdin prompts, isolated login and file outputs
+inputs:
+  pat:
+    description: TRAE CN enterprise PAT from a secret
+    required: true
+  prompt:
+    description: Literal prompt, mutually exclusive with prompt-file
+    default: ''
+  prompt-file:
+    description: UTF-8 prompt file inside working-directory
+    default: ''
+  working-directory:
+    description: Git checkout inside GITHUB_WORKSPACE
+    default: '.'
+  cli-path:
+    description: Installed official CLI command or absolute path
+    default: traecli
+  expected-version:
+    description: Optional exact numeric CLI version
+    default: ''
+  model:
+    description: Raw model id; empty uses the account default
+    default: ''
+  host:
+    description: Optional HTTPS enterprise API domain
+    default: ''
+  sandbox:
+    description: read-only or workspace-write
+    default: read-only
+  output-schema-file:
+    description: Optional JSON Schema file inside working-directory
+    default: ''
+  timeout-seconds:
+    description: Total CLI budget, 1 to 3600 seconds
+    default: '900'
+outputs:
+  result-directory:
+    description: Directory containing response, events, stderr and status
+    value: ${{ steps.run.outputs.result-directory }}
+  response-file:
+    description: Final answer, valid only when status is success
+    value: ${{ steps.run.outputs.response-file }}
+  events-file:
+    description: JSONL event file
+    value: ${{ steps.run.outputs.events-file }}
+  stderr-file:
+    description: Execution stderr
+    value: ${{ steps.run.outputs.stderr-file }}
+  result-file:
+    description: JSON status manifest
+    value: ${{ steps.run.outputs.result-file }}
+  status:
+    description: success, failed, timeout or cancelled
+    value: ${{ steps.run.outputs.status }}
+  exit-code:
+    description: Stage exit code
+    value: ${{ steps.run.outputs.exit-code }}
+runs:
+  using: composite
+  steps:
+    - id: run
+      shell: bash
+      env:
+        TRAE_PAT: ${{ inputs.pat }}
+        TRAE_PROMPT: ${{ inputs.prompt }}
+        TRAE_PROMPT_FILE: ${{ inputs.prompt-file }}
+        TRAE_WORKDIR: ${{ inputs.working-directory }}
+        TRAE_CLI: ${{ inputs.cli-path }}
+        TRAE_VERSION: ${{ inputs.expected-version }}
+        TRAE_MODEL: ${{ inputs.model }}
+        TRAE_HOST: ${{ inputs.host }}
+        TRAE_SANDBOX: ${{ inputs.sandbox }}
+        TRAE_SCHEMA: ${{ inputs.output-schema-file }}
+        TRAE_TIMEOUT: ${{ inputs.timeout-seconds }}
+      run: |
+        set -euo pipefail
+        [[ "$(uname -s)" == Linux ]] || { echo 'Linux runner required' >&2; exit 1; }
+        command -v jq >/dev/null
+        command -v timeout >/dev/null
+        private=$(mktemp -d "${RUNNER_TEMP}/traecn-auth.XXXXXX")
+        result=$(mktemp -d "${RUNNER_TEMP}/traecn-result.XXXXXX")
+        chmod 700 "$private" "$result"
+        code=1
+        version=''
+        status=failed
+        emit() { printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; }
+        redact() {
+          [[ -f "$1" && -n "$TRAE_PAT" ]] || return 0
+          local line
+          while IFS= read -r line || [[ -n "$line" ]]; do
+            printf '%s\n' "${line//"$TRAE_PAT"/[REDACTED]}"
+          done < "$1" > "$private/redacted"
+          mv "$private/redacted" "$1"
+        }
+        finish() {
+          local final_code=$?
+          trap - EXIT INT TERM
+          [[ "$final_code" == 0 ]] || code=$final_code
+          case "$code" in
+            0) status=success ;;
+            124|137) status=timeout ;;
+            130|143) status=cancelled ;;
+            *) status=failed ;;
+          esac
+          redact "$result/response.md"
+          redact "$result/events.jsonl"
+          redact "$result/stderr.log"
+          jq -n --arg status "$status" --argjson exit_code "$code" --arg cli_version "$version" \
+            --arg requested_model "$TRAE_MODEL" '{status:$status,exit_code:$exit_code,cli_version:$cli_version,requested_model:$requested_model}' > "$result/result.json"
+          emit status "$status"
+          emit exit-code "$code"
+          # This path comes exclusively from mktemp; it never comes from inputs.
+          case "$private" in "$RUNNER_TEMP"/traecn-auth.*) rm -rf -- "$private" ;; esac
+          echo "TRAE CN stage: $status"
+          exit "$code"
+        }
+        trap finish EXIT
+        trap 'exit 130' INT
+        trap 'exit 143' TERM
+        emit result-directory "$result"
+        emit response-file "$result/response.md"
+        emit events-file "$result/events.jsonl"
+        emit stderr-file "$result/stderr.log"
+        emit result-file "$result/result.json"
+        [[ "$TRAE_TIMEOUT" =~ ^[1-9][0-9]{0,3}$ && "$TRAE_TIMEOUT" -le 3600 ]] || { echo 'Invalid timeout' >&2; exit 1; }
+        deadline=$((SECONDS + TRAE_TIMEOUT))
+        [[ -n "$TRAE_PAT" && "$TRAE_PAT" != *$'\n'* && "$TRAE_PAT" != *$'\r'* ]] || { echo 'PAT is required' >&2; exit 1; }
+        [[ "$TRAE_SANDBOX" == read-only || "$TRAE_SANDBOX" == workspace-write ]] || { echo 'Invalid sandbox' >&2; exit 1; }
+        if [[ -n "$TRAE_HOST" ]]; then
+          [[ "$TRAE_HOST" == https://* && "$TRAE_HOST" != *'@'* && "$TRAE_HOST" != *'?'* && "$TRAE_HOST" != *'#'* ]] || { echo 'Invalid enterprise HTTPS domain' >&2; exit 1; }
+        fi
+        workspace=$(realpath -e "$GITHUB_WORKSPACE")
+        if [[ "$TRAE_WORKDIR" == /* ]]; then workdir=$(realpath -e "$TRAE_WORKDIR");
+        else workdir=$(realpath -e "$GITHUB_WORKSPACE/$TRAE_WORKDIR"); fi
+        [[ "$workdir" == "$workspace" || "$workdir" == "$workspace/"* ]] || { echo 'Worktree escapes workspace' >&2; exit 1; }
+        [[ -e "$workdir/.git" ]] || { echo 'Git checkout required' >&2; exit 1; }
+        if [[ -n "$TRAE_PROMPT" ]]; then
+          [[ -z "$TRAE_PROMPT_FILE" ]] || { echo 'Provide exactly one prompt input' >&2; exit 1; }
+          printf '%s' "$TRAE_PROMPT" > "$private/prompt"
+        else
+          [[ -n "$TRAE_PROMPT_FILE" ]] || { echo 'Prompt required' >&2; exit 1; }
+          if [[ "$TRAE_PROMPT_FILE" == /* ]]; then prompt_path=$(realpath -e "$TRAE_PROMPT_FILE");
+          else prompt_path=$(realpath -e "$workdir/$TRAE_PROMPT_FILE"); fi
+          [[ "$prompt_path" == "$workdir/"* && -f "$prompt_path" ]] || { echo 'Prompt escapes worktree' >&2; exit 1; }
+          cp "$prompt_path" "$private/prompt"
+        fi
+        [[ $(stat -c %s "$private/prompt") -le 1048576 ]] && grep -q '[^[:space:]]' "$private/prompt" || { echo 'Prompt is empty or too large' >&2; exit 1; }
+        cli=$(command -v "$TRAE_CLI")
+        cli=$(realpath -e "$cli")
+        mkdir -p "$private/tmp"
+        clean_cli() (
+          local mode=$1 remaining name
+          shift
+          remaining=$((deadline - SECONDS))
+          [[ "$remaining" -gt 0 ]] || exit 124
+          # Keep shell variable values but remove inherited exported credentials.
+          for name in $(compgen -e); do
+            case "$name" in PATH|LANG|LC_ALL|SSL_CERT_FILE|SSL_CERT_DIR|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|NO_PROXY|http_proxy|https_proxy|all_proxy|no_proxy) ;;
+              *) export -n "$name" ;;
+            esac
+          done
+          export HOME="$private" XDG_CONFIG_HOME="$private/.config" XDG_DATA_HOME="$private/.local/share" \
+            XDG_STATE_HOME="$private/.local/state" XDG_CACHE_HOME="$private/.cache" TMPDIR="$private/tmp"
+          [[ -z "$TRAE_HOST" ]] || export TRAECLI_HOST="$TRAE_HOST"
+          if [[ "$mode" == login ]]; then export TRAECLI_PERSONAL_ACCESS_TOKEN="$TRAE_PAT"; fi
+          cd "$workdir"
+          exec timeout --kill-after=5s "$remaining" "$cli" "$@"
+        )
+        clean_cli probe --version > "$private/version" 2> "$private/probe.err"
+        version=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' "$private/version" | head -n 1)
+        [[ -n "$version" && ( -z "$TRAE_VERSION" || "$version" == "$TRAE_VERSION" ) ]] || { echo 'Unexpected CLI version' >&2; exit 1; }
+        clean_cli probe exec --help > "$private/help" 2> "$private/help.err"
+        for flag in --json --output-last-message --ephemeral --ignore-user-config; do
+          grep -q -- "$flag" "$private/help" || { echo 'Unsupported CLI exec interface' >&2; exit 1; }
+        done
+        clean_cli login login --with-trae-pat > "$private/login.out" 2> "$private/login.err"
+        args=(--ask-for-approval never exec --json --color never --ephemeral --ignore-user-config \
+          --sandbox "$TRAE_SANDBOX" --output-last-message "$result/response.md")
+        [[ -z "$TRAE_MODEL" ]] || args+=(--model "$TRAE_MODEL")
+        if [[ -n "$TRAE_SCHEMA" ]]; then
+          if [[ "$TRAE_SCHEMA" == /* ]]; then schema_path=$(realpath -e "$TRAE_SCHEMA");
+          else schema_path=$(realpath -e "$workdir/$TRAE_SCHEMA"); fi
+          [[ "$schema_path" == "$workdir/"* && -f "$schema_path" ]] || { echo 'Schema escapes worktree' >&2; exit 1; }
+          jq -e 'type == "object"' "$schema_path" >/dev/null
+          cp "$schema_path" "$private/schema.json"
+          args+=(--output-schema "$private/schema.json")
+        fi
+        set +e
+        clean_cli exec "${args[@]}" - < "$private/prompt" > "$result/events.jsonl" 2> "$result/stderr.log"
+        code=$?
+        set -e
+        [[ "$code" == 0 ]] || exit "$code"
+        [[ -s "$result/response.md" && $(stat -c %s "$result/response.md") -le 10485760 ]] && grep -q '[^[:space:]]' "$result/response.md" || { echo 'Missing or oversized final response' >&2; exit 1; }
+        [[ -z "$TRAE_SCHEMA" ]] || jq -e . "$result/response.md" >/dev/null
+        exit 0

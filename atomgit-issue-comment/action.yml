@@ -1,0 +1,41 @@
+name: AtomGit Issue comment
+description: Publish one owned reply, reject stale context and verify the resulting body
+inputs:
+  token:
+    description: AtomGit token
+    required: true
+  context-file:
+    description: Context snapshot from atomgit-issue-context
+    required: true
+  body-file:
+    description: UTF-8 reply file
+    required: true
+  model:
+    description: Optional exact raw model id for a small By attribution
+    default: ''
+  result-file:
+    description: Publication evidence JSON
+    default: _issue-context/published.json
+outputs:
+  comment-id:
+    description: Published comment id
+    value: ${{ steps.run.outputs.comment-id }}
+  comment-url:
+    description: Published comment URL
+    value: ${{ steps.run.outputs.comment-url }}
+  result-file:
+    description: Verified publication evidence
+    value: ${{ steps.run.outputs.result-file }}
+runs:
+  using: composite
+  steps:
+  - id: run
+    shell: bash
+    env:
+      ACTION_OPERATION: comment
+      ATOMGIT_TOKEN: ${{ inputs.token }}
+      CONTEXT_FILE: ${{ inputs.context-file }}
+      BODY_FILE: ${{ inputs.body-file }}
+      MODEL_ID: ${{ inputs.model }}
+      RESULT_FILE: ${{ inputs.result-file }}
+    run: python3 "$GITHUB_ACTION_PATH/../_lib/operations.py"

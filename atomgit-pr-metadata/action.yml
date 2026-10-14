@@ -1,0 +1,33 @@
+name: AtomGit PR metadata
+description: Validate open pull request refs and exact head SHA
+inputs:
+  token:
+    description: AtomGit token
+    required: true
+  repository:
+    description: AtomGit owner/repository
+    required: true
+  pr-number:
+    description: Positive pull request number
+    required: true
+outputs:
+  base-ref:
+    description: Target branch
+    value: ${{ steps.run.outputs.base-ref }}
+  head-ref:
+    description: Source branch
+    value: ${{ steps.run.outputs.head-ref }}
+  head-sha:
+    description: Exact PR head SHA
+    value: ${{ steps.run.outputs.head-sha }}
+runs:
+  using: composite
+  steps:
+  - id: run
+    shell: bash
+    env:
+      ACTION_OPERATION: pr-metadata
+      ATOMGIT_TOKEN: ${{ inputs.token }}
+      REPOSITORY: ${{ inputs.repository }}
+      PR_NUMBER: ${{ inputs.pr-number }}
+    run: python3 "$GITHUB_ACTION_PATH/../_lib/operations.py"

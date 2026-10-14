@@ -1,0 +1,13 @@
+name: Trust checkout and declared submodules
+description: Register a mounted Git checkout and its contained submodule paths as safe directories
+inputs:
+  worktree:
+    description: Existing checkout path; trust must not escape it
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        TRUST_WORKTREE: ${{ inputs.worktree }}
+      run: bash "$GITHUB_ACTION_PATH/trust-checkout.sh" "$TRUST_WORKTREE"

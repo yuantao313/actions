@@ -1,0 +1,147 @@
+[
+  {
+    "path": ".gitattributes",
+    "bytes": 20,
+    "sha256": "d711b6ba64c7208f3059111e2a74a2453348584bef1fec237198ad08befe28b9"
+  },
+  {
+    "path": ".github/workflows/ci.yml",
+    "bytes": 723,
+    "sha256": "d809890438499f875a8177c5a838e431b4bca326d1e5d3e76baddff48c98c20e"
+  },
+  {
+    "path": ".gitignore",
+    "bytes": 49,
+    "sha256": "5e6fd35970992c0c5ee625a5897286a836c58c8d7d9553fae62ffae82e73644e"
+  },
+  {
+    "path": "_lib/atomgit_api.py",
+    "bytes": 3246,
+    "sha256": "8ca915de911d47bb168229ebcd2275c2723e000ffced1c3e12e94b4797148429"
+  },
+  {
+    "path": "_lib/operations.py",
+    "bytes": 12347,
+    "sha256": "886b6f2903347813215cbd72f5d2923f180519c2007bbcc59042c36e6c6434f4"
+  },
+  {
+    "path": "atomgit-api/action.yml",
+    "bytes": 1013,
+    "sha256": "0d5ef98366ffc8fe5a064489013ed81567de73eb47dbcd968aa8a6cdad9cece0"
+  },
+  {
+    "path": "atomgit-checkout-pr/action.yml",
+    "bytes": 2359,
+    "sha256": "da759a6370af730ce49e908c3102703d7b5fce3a767249ab0a98af32db925d6a"
+  },
+  {
+    "path": "atomgit-issue-comment/action.yml",
+    "bytes": 1279,
+    "sha256": "f4347b541417b29d75b4854f7c2f0cb0b82f21bcfcbe3b15b54bf84b53bef4d5"
+  },
+  {
+    "path": "atomgit-issue-context/action.yml",
+    "bytes": 2346,
+    "sha256": "d70ab26d0db53bbec25f4789710a7c97bad8aee0d5a374b7036570232d142520"
+  },
+  {
+    "path": "atomgit-issue-context/prompt.md",
+    "bytes": 1222,
+    "sha256": "8734e0692e4c028af6e1e21a4e9140e584542fb003c0853b8ad1b7b92ba2a3fb"
+  },
+  {
+    "path": "atomgit-pr-metadata/action.yml",
+    "bytes": 913,
+    "sha256": "0751ffe4d2dc3683043a003efb0e91b04796e553466d5addd78cf98953c7106b"
+  },
+  {
+    "path": "atomgit-pr-status/action.yml",
+    "bytes": 1615,
+    "sha256": "56f6bdd0fbe4d8218a87aafe12ac8fd3b9bafd935dd2b7301064e49fe05a02a0"
+  },
+  {
+    "path": "atomgit-release/action.yml",
+    "bytes": 1207,
+    "sha256": "c330dcc58f153f68b54e4f16422fa39e6abc5f1aa2e5f82c1ddee799d888b714"
+  },
+  {
+    "path": "docs/CATALOG.md",
+    "bytes": 2967,
+    "sha256": "3300cdcde770e5f00be92412efeb9a843b9f4cb5cf80c41539d0055edca23bf3"
+  },
+  {
+    "path": "docs/MIGRATION.md",
+    "bytes": 2819,
+    "sha256": "13c361358adfcacb0b7bef426b2c9b134f94fb6612dc4775e72f1aae40119a77"
+  },
+  {
+    "path": "install-python-requirements/action.yml",
+    "bytes": 578,
+    "sha256": "acec3025e1242baa81b1801e4533e7eb271ef912e9945f3e05b80ab95ea41761"
+  },
+  {
+    "path": "install-python-requirements/install.py",
+    "bytes": 1652,
+    "sha256": "c51c70963e0e944e39f16000bb24325b85beeb0fa171c3ca7b39a63f789bd298"
+  },
+  {
+    "path": "README.md",
+    "bytes": 4879,
+    "sha256": "d33f12fa4a39e62eb8436de1a4f541623f6f2e6ab612772ebc891fb41744430a"
+  },
+  {
+    "path": "setup-traecn/action.yml",
+    "bytes": 2966,
+    "sha256": "75f782f8a017ff9a79ee9c40557ea7d31caba8dae24f2d345b90e41a775d8d56"
+  },
+  {
+    "path": "tests/test_atomgit_api.py",
+    "bytes": 2333,
+    "sha256": "5f6b3d1b77dab1f509f974f9ccc47d15b184fa58dba56e675607863f83147ce0"
+  },
+  {
+    "path": "tests/test_catalog.py",
+    "bytes": 2143,
+    "sha256": "c0ffd72c2c69b447d880aaf53fbdb70c3c1d37bdef93fea9092afdf11af4f828"
+  },
+  {
+    "path": "tests/test_checkout_pr.py",
+    "bytes": 3091,
+    "sha256": "d1f733fe7eae83b0613ad72f7485279fc7dcf6cbc891ab3478122bdc9ac71390"
+  },
+  {
+    "path": "tests/test_operations.py",
+    "bytes": 6686,
+    "sha256": "53a76c3aca5078deecf934168ab8705c874b083f273d57d774df0da3900b9cfb"
+  },
+  {
+    "path": "tests/test_requirements.py",
+    "bytes": 1019,
+    "sha256": "6a89cce2aeb16e13239d906bec1632dadd2debdc7cbdf6c186026efcc2ffdf1c"
+  },
+  {
+    "path": "tests/test_traecn.py",
+    "bytes": 3992,
+    "sha256": "0ef2e92df5620a3005a4bdeb7c1f4ccbc1d0dd0b1c354992d50ffb2ec2b500cc"
+  },
+  {
+    "path": "tests/test_trust_checkout.sh",
+    "bytes": 1836,
+    "sha256": "9642ea5abce43076a16445ba8bc900c4c99c77c6fc4c55f91f74abde0ee90dc4"
+  },
+  {
+    "path": "traecn/action.yml",
+    "bytes": 9657,
+    "sha256": "adc5a17b81ec2d711e5b45e5605dbeb0878f602c86fbc11c777dca3839c0261f"
+  },
+  {
+    "path": "trust-checkout/action.yml",
+    "bytes": 433,
+    "sha256": "780ddd8919683982f572725ce5894598b1a10d1fe6a9b29b0c19a5c260ddd564"
+  },
+  {
+    "path": "trust-checkout/trust-checkout.sh",
+    "bytes": 1463,
+    "sha256": "87b9d394e17b1f17f1cbd93fa54a6599ff51bb701aff82da169098a39e9e7223"
+  }
+]

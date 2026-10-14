@@ -1,0 +1,34 @@
+name: AtomGit API
+description: Authenticated AtomGit v5 REST requests with JSON file input and output
+inputs:
+  token:
+    description: AtomGit personal access token
+    required: true
+  method:
+    description: GET, POST, PATCH, PUT or DELETE
+    default: GET
+  path:
+    description: Path relative to https://api.atomgit.com/api/v5
+    required: true
+  body-file:
+    description: Optional JSON object or array file
+    default: ''
+  body-encoding:
+    description: form or json
+    default: form
+outputs:
+  response-file:
+    description: JSON response file
+    value: ${{ steps.run.outputs.response-file }}
+runs:
+  using: composite
+  steps:
+  - id: run
+    shell: bash
+    env:
+      ATOMGIT_TOKEN: ${{ inputs.token }}
+      ATOMGIT_API_METHOD: ${{ inputs.method }}
+      ATOMGIT_API_PATH: ${{ inputs.path }}
+      ATOMGIT_API_BODY: ${{ inputs.body-file }}
+      ATOMGIT_API_ENCODING: ${{ inputs.body-encoding }}
+    run: python3 "$GITHUB_ACTION_PATH/../_lib/atomgit_api.py"

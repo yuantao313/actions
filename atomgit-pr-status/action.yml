@@ -1,0 +1,55 @@
+name: AtomGit PR CI status
+description: Maintain optional configured CI labels and create or update a verified PR comment
+inputs:
+  token:
+    description: AtomGit token
+    required: true
+  repository:
+    description: AtomGit owner/repository
+    required: true
+  pr-number:
+    description: Positive pull request number
+    required: true
+  phase:
+    description: start or finish
+    required: true
+  result:
+    description: Job result for finish
+    default: ''
+  run-url:
+    description: HTTPS workflow result URL
+    required: true
+  comment-id:
+    description: Optional existing comment id to update
+    default: ''
+  running-label:
+    description: Optional existing running label
+    default: ''
+  success-label:
+    description: Optional existing success label
+    default: ''
+  failure-label:
+    description: Optional existing failure label
+    default: ''
+outputs:
+  comment-id:
+    description: CI comment id
+    value: ${{ steps.run.outputs.comment-id }}
+runs:
+  using: composite
+  steps:
+  - id: run
+    shell: bash
+    env:
+      ACTION_OPERATION: pr-status
+      ATOMGIT_TOKEN: ${{ inputs.token }}
+      REPOSITORY: ${{ inputs.repository }}
+      PR_NUMBER: ${{ inputs.pr-number }}
+      PHASE: ${{ inputs.phase }}
+      RESULT: ${{ inputs.result }}
+      RUN_URL: ${{ inputs.run-url }}
+      COMMENT_ID: ${{ inputs.comment-id }}
+      RUNNING_LABEL: ${{ inputs.running-label }}
+      SUCCESS_LABEL: ${{ inputs.success-label }}
+      FAILURE_LABEL: ${{ inputs.failure-label }}
+    run: python3 "$GITHUB_ACTION_PATH/../_lib/operations.py"

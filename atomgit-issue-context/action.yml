@@ -1,0 +1,67 @@
+name: AtomGit Issue context
+description: Fetch complete Issue discussion and produce a trusted repository prompt with source provenance
+inputs:
+  token:
+    description: AtomGit token
+    required: true
+  issue-url:
+    description: https://atomgit.com/owner/repository/issues/number
+    required: true
+  worktree:
+    description: Source checkout inside workspace; public repository cloned if absent
+    default: _source
+  prompt-template:
+    description: Optional trusted UTF-8 template; empty uses the shipped generic template
+    default: ''
+  result-directory:
+    description: Context metadata directory
+    default: _issue-context
+outputs:
+  worktree:
+    description: Source directory
+    value: ${{ steps.run.outputs.worktree }}
+  prompt-file:
+    description: Prepared prompt path
+    value: ${{ steps.run.outputs.prompt-file }}
+  context-file:
+    description: Snapshot metadata file
+    value: ${{ steps.run.outputs.context-file }}
+  source-sha:
+    description: Analyzed source revision
+    value: ${{ steps.run.outputs.source-sha }}
+runs:
+  using: composite
+  steps:
+  - shell: bash
+    env:
+      ISSUE_URL: ${{ inputs.issue-url }}
+      WORKTREE: ${{ inputs.worktree }}
+    run: 'set -euo pipefail
+
+      workspace=$(realpath -e "$GITHUB_WORKSPACE")
+
+      worktree=$(realpath -m "$WORKTREE")
+
+      [[ "$worktree" == "$workspace/"* ]] || { echo ''Source checkout must be a child of workspace'' >&2; exit 1;
+      }
+
+      source_url=$(PYTHONPATH="$GITHUB_ACTION_PATH/../_lib" python3 -c ''import os; from operations import issue_url;
+      repo,_=issue_url(os.environ["ISSUE_URL"]); print(f"https://atomgit.com/{repo}.git")'')
+
+      if [[ ! -d "$worktree" ]]; then git clone --depth 200 "$source_url" "$worktree"; fi
+
+      [[ -e "$worktree/.git" ]] || { echo ''Source is not a Git checkout'' >&2; exit 1; }
+
+      '
+  - id: run
+    shell: bash
+    env:
+      ACTION_OPERATION: context
+      ATOMGIT_TOKEN: ${{ inputs.token }}
+      ISSUE_URL: ${{ inputs.issue-url }}
+      WORKTREE: ${{ inputs.worktree }}
+      PROMPT_TEMPLATE: ${{ inputs.prompt-template }}
+      RESULT_DIRECTORY: ${{ inputs.result-directory }}
+    run: 'export PROMPT_TEMPLATE="${PROMPT_TEMPLATE:-$GITHUB_ACTION_PATH/prompt.md}"
+
+      python3 "$GITHUB_ACTION_PATH/../_lib/operations.py"'

@@ -1,0 +1,58 @@
+name: Setup TRAE CN
+description: Install hash-verified official TRAE CN binaries into a job-local directory
+inputs:
+  version:
+    description: Numeric binary version; another version requires both checksum inputs
+    default: 0.209.1
+  cli-sha256:
+    description: Optional SHA-256 of the compressed CLI for the runner architecture
+    default: ''
+  host-sha256:
+    description: Optional SHA-256 of the compressed code-mode host
+    default: ''
+outputs:
+  cli-path:
+    description: Installed command path
+    value: ${{ steps.install.outputs.cli-path }}
+  version:
+    description: Installed numeric version
+    value: ${{ steps.install.outputs.version }}
+runs:
+  using: composite
+  steps:
+    - id: install
+      shell: bash
+      env:
+        CLI_VERSION: ${{ inputs.version }}
+        CLI_HASH: ${{ inputs.cli-sha256 }}
+        HOST_HASH: ${{ inputs.host-sha256 }}
+      run: |
+        set -euo pipefail
+        [[ "$(uname -s)" == Linux && "$CLI_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Linux and numeric version required' >&2; exit 1; }
+        case "$(uname -m)" in
+          x86_64) arch=x86_64
+            default_cli=643cf93b876e89ea5c72c87d3448b26690c6b71e45b3a7756b914d2ca53c1405
+            default_host=493c137bf1ec909aa565e4e8e534d694edf3d9b388449019fbe7e3ab189d6765 ;;
+          aarch64) arch=aarch64
+            default_cli=63205dfddf6ae479d0148f7caa10e2487231c442da2d1db44e5388f08923d00b
+            default_host=793f466a73dad7b95c233b56ece3b9afc885a7a3318b8e6127bf00aa02f59241 ;;
+          *) echo 'Unsupported CPU architecture' >&2; exit 1 ;;
+        esac
+        if [[ "$CLI_VERSION" == 0.209.1 ]]; then
+          CLI_HASH=${CLI_HASH:-$default_cli}
+          HOST_HASH=${HOST_HASH:-$default_host}
+        fi
+        [[ "$CLI_HASH" =~ ^[0-9a-f]{64}$ && "$HOST_HASH" =~ ^[0-9a-f]{64}$ ]] || { echo 'Two pinned SHA-256 checksums required' >&2; exit 1; }
+        directory=$(mktemp -d "$RUNNER_TEMP/traecn-bin.XXXXXX")
+        base="https://lf-cdn.trae.com.cn/obj/trae-com-cn/trae-cli/v2/releases/$CLI_VERSION"
+        curl -fsSL --retry 3 --connect-timeout 30 --max-time 300 "$base/traex-linux-$arch.gz" -o "$directory/cli.gz"
+        curl -fsSL --retry 3 --connect-timeout 30 --max-time 180 "$base/traex-code-mode-host-linux-$arch.gz" -o "$directory/host.gz"
+        printf '%s  %s\n%s  %s\n' "$CLI_HASH" "$directory/cli.gz" "$HOST_HASH" "$directory/host.gz" | sha256sum --check
+        gzip -dc "$directory/cli.gz" > "$directory/traex"
+        gzip -dc "$directory/host.gz" > "$directory/traex-code-mode-host"
+        chmod 755 "$directory/traex" "$directory/traex-code-mode-host"
+        ln -s traex "$directory/traecli"
+        printf '%s\n' '{"channel":"public","release_channel":"stable","auto_update":false}' > "$directory/trae-installation.json"
+        "$directory/traecli" --version
+        echo "$directory" >> "$GITHUB_PATH"
+        printf 'cli-path=%s\nversion=%s\n' "$directory/traecli" "$CLI_VERSION" >> "$GITHUB_OUTPUT"

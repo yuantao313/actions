@@ -1,0 +1,23 @@
+name: Validate shared action stages
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-contracts:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: python3 -m pip install 'PyYAML==6.0.3'
+      - name: Validate scripts and action contracts without service credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do bash -n "$file"; done < <(find . -name '*.sh' -not -path './.git/*')
+          python3 -m unittest discover -s tests -p 'test_*.py' -v
+          bash tests/test_trust_checkout.sh

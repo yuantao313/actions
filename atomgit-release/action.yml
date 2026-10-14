@@ -1,0 +1,42 @@
+name: AtomGit Release
+description: Create or update a tagged release and upload arbitrary asset files with read-back verification
+inputs:
+  token:
+    description: AtomGit token
+    required: true
+  repository:
+    description: AtomGit owner/repository
+    required: true
+  tag:
+    description: Exact release tag
+    required: true
+  name:
+    description: Optional release title
+    default: ''
+  body-file:
+    description: Optional UTF-8 release body
+    default: ''
+  assets-file:
+    description: Optional JSON array of asset paths; no package-specific validation
+    default: ''
+outputs:
+  release-url:
+    description: Release URL
+    value: ${{ steps.run.outputs.release-url }}
+  tag:
+    description: Release tag
+    value: ${{ steps.run.outputs.tag }}
+runs:
+  using: composite
+  steps:
+  - id: run
+    shell: bash
+    env:
+      ACTION_OPERATION: release
+      ATOMGIT_TOKEN: ${{ inputs.token }}
+      REPOSITORY: ${{ inputs.repository }}
+      TAG: ${{ inputs.tag }}
+      RELEASE_NAME: ${{ inputs.name }}
+      BODY_FILE: ${{ inputs.body-file }}
+      ASSETS_FILE: ${{ inputs.assets-file }}
+    run: python3 "$GITHUB_ACTION_PATH/../_lib/operations.py"
