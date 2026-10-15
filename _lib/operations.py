@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import time
 import urllib.parse
 
 try:
@@ -139,7 +140,7 @@ def pr_metadata(api, repo, number):
     return {"base-ref": base, "head-ref": head, "head-sha": sha}
 
 
-def pr_status(api, repo, number, phase, outcome, run_url, comment_id, labels):
+def pr_status(api, repo, number, phase, outcome, run_url, comment_id, labels, body=None):
     repository(repo)
     if not re.fullmatch(r"[1-9][0-9]*", number) or phase not in {"start", "finish"}:
         raise ValueError("Invalid PR number or phase")
@@ -147,6 +148,8 @@ def pr_status(api, repo, number, phase, outcome, run_url, comment_id, labels):
         raise ValueError("HTTPS run URL required")
     if comment_id and not re.fullmatch(r"[1-9][0-9]*", comment_id):
         raise ValueError("Invalid comment id")
+    if body is not None and (not isinstance(body, str) or not body.strip()):
+        raise ValueError("PR comment body must be nonempty text")
     root = f"/repos/{repo}"
     path = f"{root}/pulls/{number}"
     selected = labels[0] if phase == "start" else labels[1 if outcome == "success" else 2]
@@ -158,17 +161,28 @@ def pr_status(api, repo, number, phase, outcome, run_url, comment_id, labels):
         if selected:
             api.request("POST", path + "/labels", [selected], "json")
     state = "started" if phase == "start" else ("succeeded" if outcome == "success" else "failed")
-    body = f"CI {state}: {run_url}"
+    body = body if body is not None else f"CI {state}: {run_url}"
     if comment_id:
         if not re.fullmatch(r"[1-9][0-9]*", comment_id):
             raise ValueError("Invalid comment id")
         api.request("PATCH", f"{root}/pulls/comments/{comment_id}", {"body": body})
     else:
         comment_id = str(api.request("POST", path + "/comments", {"body": body})["id"])
-    verified = api.request("GET", f"{root}/pulls/comments/{comment_id}")
-    if verified.get("body", "").replace("\r\n", "\n") != body:
-        raise RuntimeError("PR status comment verification failed")
-    return {"comment-id": comment_id}
+    if not re.fullmatch(r"[1-9][0-9]*", comment_id):
+        raise ValueError("Invalid created comment id")
+    for attempt in range(5):
+        try:
+            verified = api.request("GET", f"{root}/pulls/comments/{comment_id}")
+        except RuntimeError as error:
+            if not any(f"(HTTP {status})" in str(error) for status in (400, 404)):
+                raise
+        else:
+            if (str(verified.get("id")) == comment_id
+                    and verified.get("body", "").replace("\r\n", "\n") == body.replace("\r\n", "\n")):
+                return {"comment-id": comment_id}
+        if attempt < 4:
+            time.sleep(min(2 ** attempt, 4))
+    raise RuntimeError("PR status comment verification failed after 5 reads")
 
 
 def release(api, repo, tag, name, body, assets):
@@ -228,7 +242,8 @@ def main():
     elif operation == "pr-status":
         result = pr_status(api, os.environ["REPOSITORY"], os.environ["PR_NUMBER"], os.environ["PHASE"],
                            os.environ.get("RESULT", ""), os.environ["RUN_URL"], os.environ.get("COMMENT_ID", ""),
-                           [os.environ.get(name, "") for name in ("RUNNING_LABEL", "SUCCESS_LABEL", "FAILURE_LABEL")])
+                           [os.environ.get(name, "") for name in ("RUNNING_LABEL", "SUCCESS_LABEL", "FAILURE_LABEL")],
+                           Path(os.environ["BODY_FILE"]).read_text(encoding="utf-8") if os.environ.get("BODY_FILE") else None)
     elif operation == "release":
         body = Path(os.environ["BODY_FILE"]).read_text(encoding="utf-8") if os.environ.get("BODY_FILE") else None
         assets = json.loads(Path(os.environ["ASSETS_FILE"]).read_text(encoding="utf-8")) if os.environ.get("ASSETS_FILE") else []

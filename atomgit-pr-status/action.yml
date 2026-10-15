@@ -19,6 +19,9 @@ inputs:
   run-url:
     description: HTTPS workflow result URL
     required: true
+  body-file:
+    description: Optional UTF-8 comment text; empty uses the standard CI status message
+    default: ''
   comment-id:
     description: Optional existing comment id to update
     default: ''
@@ -49,6 +52,7 @@ runs:
       RESULT: ${{ inputs.result }}
       RUN_URL: ${{ inputs.run-url }}
       COMMENT_ID: ${{ inputs.comment-id }}
+      BODY_FILE: ${{ inputs.body-file }}
       RUNNING_LABEL: ${{ inputs.running-label }}
       SUCCESS_LABEL: ${{ inputs.success-label }}
       FAILURE_LABEL: ${{ inputs.failure-label }}
