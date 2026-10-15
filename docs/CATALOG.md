@@ -9,7 +9,7 @@ helpers live in `_lib`; TRAE CN runs directly from its YAML.
 | `atomgit-api` | token, HTTP method, fixed-root path, optional body file and form/JSON encoding; supports empty mutation responses | response-file |
 | `atomgit-pr-metadata` | repository and open PR number; validates branch refs and exact head SHA | base-ref, head-ref, head-sha |
 | `atomgit-checkout-pr` | repository, PR number, validated base ref/head SHA, fresh workspace path; merges into the target actually fetched; conflicts fail | worktree, base-sha, head-sha |
-| `atomgit-pr-status` | repository, PR number, start/finish, result, run URL; optional labels, comment body file and existing comment id; verifies comments with bounded read-after-write retries | comment-id |
+| `atomgit-pr-status` | repository, PR number, start/finish, result, run URL; optional labels, comment body file and existing comment id; publishes comments as JSON | comment-id |
 | `atomgit-issue-context` | Issue URL and source directory; optionally supplied trusted prompt; clones public source if absent, paginates discussion | worktree, prompt-file, context-file, source-sha |
 | `atomgit-issue-comment` | context snapshot, UTF-8 body and optional raw model id; rejects stale context, owns one reply and GET-verifies it | comment-id, comment-url, result-file |
 | `atomgit-release` | repository, tag, optional title/body file and JSON array of asset paths; no wheel or package assumptions | release-url, tag |

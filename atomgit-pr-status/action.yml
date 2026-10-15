@@ -1,5 +1,5 @@
 name: AtomGit PR CI status
-description: Maintain optional configured CI labels and create or update a verified PR comment
+description: Maintain optional configured CI labels and create or update a PR comment
 inputs:
   token:
     description: AtomGit token
