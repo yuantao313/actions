@@ -7,7 +7,6 @@ import os
 from pathlib import Path
 import re
 import subprocess
-import time
 import urllib.parse
 
 try:
@@ -165,24 +164,12 @@ def pr_status(api, repo, number, phase, outcome, run_url, comment_id, labels, bo
     if comment_id:
         if not re.fullmatch(r"[1-9][0-9]*", comment_id):
             raise ValueError("Invalid comment id")
-        api.request("PATCH", f"{root}/pulls/comments/{comment_id}", {"body": body})
+        api.request("PATCH", f"{root}/pulls/comments/{comment_id}", {"body": body}, "json")
     else:
-        comment_id = str(api.request("POST", path + "/comments", {"body": body})["id"])
-    if not re.fullmatch(r"[1-9][0-9]*", comment_id):
-        raise ValueError("Invalid created comment id")
-    for attempt in range(5):
-        try:
-            verified = api.request("GET", f"{root}/pulls/comments/{comment_id}")
-        except RuntimeError as error:
-            if not any(f"(HTTP {status})" in str(error) for status in (400, 404)):
-                raise
-        else:
-            if (str(verified.get("id")) == comment_id
-                    and verified.get("body", "").replace("\r\n", "\n") == body.replace("\r\n", "\n")):
-                return {"comment-id": comment_id}
-        if attempt < 4:
-            time.sleep(min(2 ** attempt, 4))
-    raise RuntimeError("PR status comment verification failed after 5 reads")
+        comment_id = str(api.request("POST", path + "/comments", {"body": body}, "json")["id"])
+    if not comment_id or comment_id == "None":
+        raise ValueError("Missing created comment id")
+    return {"comment-id": comment_id}
 
 
 def release(api, repo, tag, name, body, assets):

@@ -8,21 +8,17 @@ from _lib import operations as op
 
 
 class API:
-    def __init__(self, reads=()):
-        self.reads = list(reads)
+    def __init__(self, post_identifier=42):
+        self.post_identifier = post_identifier
         self.calls = []
         self.comment = {'id': 42, 'body': 'old body'}
 
     def request(self, method, path, body=None, encoding='form'):
-        self.calls.append((method, path, body))
+        self.calls.append((method, path, body, encoding))
         if method == 'GET' and path.endswith('/labels'): return [{'name': 'success'}]
         if method == 'POST' and path.endswith('/comments') or method == 'PATCH':
             self.comment['body'] = body['body']
-            return dict(self.comment)
-        if method == 'GET' and '/pulls/comments/' in path:
-            value = self.reads.pop(0) if self.reads else dict(self.comment)
-            if isinstance(value, Exception): raise value
-            return value
+            return dict(self.comment, id=self.post_identifier)
         return {}
 
 
@@ -33,34 +29,25 @@ def status(api, body=None, comment_id=''):
 
 
 class PRStatusTests(unittest.TestCase):
-    @patch.object(op.time, 'sleep')
-    def test_recently_created_comment_can_be_temporarily_unavailable(self, sleep):
-        api = API([RuntimeError('AtomGit GET request failed (HTTP 400)'),
-                   RuntimeError('AtomGit GET request failed (HTTP 404)'),
-                   {'id': 42, 'body': 'stale body'}])
-        self.assertEqual(status(api, 'Build running: https://github.com/run/1'), {'comment-id': '42'})
-        self.assertEqual([call.args[0] for call in sleep.call_args_list], [1, 2, 4])
-        self.assertEqual(len([c for c in api.calls if c[0] == 'POST' and c[1].endswith('/comments')]), 1)
-        self.assertFalse(any(c[0] == 'PATCH' for c in api.calls))
+    def test_creation_preserves_returned_id_and_does_not_read_comment(self):
+        for identifier in (42, '97219c08d421e55cfa841deca16a30f5d7269e10'):
+            with self.subTest(identifier=identifier):
+                api = API(post_identifier=identifier)
+                result = status(api, 'Exact final body')
+                self.assertEqual(result, {'comment-id': str(identifier)})
+                self.assertEqual([c for c in api.calls if '/comments' in c[1]], [
+                    ('POST', '/repos/example/project/pulls/2/comments', {'body': 'Exact final body'}, 'json')])
 
-    @patch.object(op.time, 'sleep')
-    def test_permanent_readback_failure_fails_without_reposting(self, sleep):
-        for reads in [[RuntimeError('AtomGit GET request failed (HTTP 400)')]*5,
-                      [{'id': 999, 'body': 'body'}]*5,
-                      [{'id': 42, 'body': 'wrong body'}]*5]:
-            api = API(reads)
-            with self.assertRaisesRegex(RuntimeError, 'after 5 reads'):
-                status(api, 'body')
-            self.assertEqual(len([c for c in api.calls if c[0] == 'POST' and c[1].endswith('/comments')]), 1)
-            self.assertEqual(len([c for c in api.calls if c[0] == 'GET' and '/pulls/comments/' in c[1]]), 5)
-
-    @patch.object(op.time, 'sleep')
-    def test_auth_and_server_errors_are_not_retried_or_hidden(self, sleep):
-        for code in (401, 403, 500):
-            api = API([RuntimeError(f'AtomGit GET request failed (HTTP {code})')])
-            with self.assertRaisesRegex(RuntimeError, f'HTTP {code}'):
-                status(api)
-        sleep.assert_not_called()
+    def test_comment_write_failure_still_fails(self):
+        api = API()
+        original = api.request
+        def request(method, path, body=None, encoding='form'):
+            if method == 'POST' and path.endswith('/comments'):
+                raise RuntimeError('AtomGit POST request failed (HTTP 403)')
+            return original(method, path, body, encoding)
+        api.request = request
+        with self.assertRaisesRegex(RuntimeError, 'HTTP 403'):
+            status(api)
 
     def test_default_body_and_updating_an_existing_comment(self):
         api = API()
@@ -76,7 +63,7 @@ class PRStatusTests(unittest.TestCase):
             status(api, '  ')
         self.assertEqual(api.calls, [])
 
-    def test_action_entrypoint_reads_the_exact_body_file_and_emits_verified_id(self):
+    def test_action_entrypoint_reads_the_exact_body_file_and_emits_returned_id(self):
         api = API()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
