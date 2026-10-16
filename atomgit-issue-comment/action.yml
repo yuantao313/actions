@@ -8,8 +8,11 @@ inputs:
     description: Context snapshot from atomgit-issue-context
     required: true
   body-file:
-    description: UTF-8 reply file
-    required: true
+    description: UTF-8 reply file; provide this or stage-result
+    default: ''
+  stage-result:
+    description: TRAE result-directory; reads response and model from the same execution, exclusive with body-file and model
+    default: ''
   model:
     description: Optional exact raw model id for a small By attribution
     default: ''
@@ -36,6 +39,7 @@ runs:
       ATOMGIT_TOKEN: ${{ inputs.token }}
       CONTEXT_FILE: ${{ inputs.context-file }}
       BODY_FILE: ${{ inputs.body-file }}
+      TRAE_RESULT: ${{ inputs.stage-result }}
       MODEL_ID: ${{ inputs.model }}
       RESULT_FILE: ${{ inputs.result-file }}
     run: python3 "$GITHUB_ACTION_PATH/../_lib/operations.py"

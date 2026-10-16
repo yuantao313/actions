@@ -11,8 +11,10 @@ import urllib.parse
 
 try:
     from .atomgit_api import AtomGitAPI
+    from .traecn_result import load_result
 except ImportError:
     from atomgit_api import AtomGitAPI
+    from traecn_result import load_result
 
 MARKER = "<!-- shared-actions:issue-reply:v1 -->"
 
@@ -222,8 +224,15 @@ def main():
                          Path(os.environ["PROMPT_TEMPLATE"]), Path(os.environ["RESULT_DIRECTORY"]).resolve())
     elif operation == "comment":
         metadata = json.loads(Path(os.environ["CONTEXT_FILE"]).read_text(encoding="utf-8"))
-        result = comment(api, metadata, Path(os.environ["BODY_FILE"]).read_text(encoding="utf-8"),
-                         os.environ.get("MODEL_ID", ""), Path(os.environ["RESULT_FILE"]).resolve())
+        if os.environ.get("TRAE_RESULT"):
+            if os.environ.get("BODY_FILE") or os.environ.get("MODEL_ID"):
+                raise ValueError("stage-result cannot be combined with body-file or model")
+            stage = load_result(os.environ["TRAE_RESULT"])
+            answer, model = stage.body, stage.model
+        else:
+            answer = Path(os.environ["BODY_FILE"]).read_text(encoding="utf-8")
+            model = os.environ.get("MODEL_ID", "")
+        result = comment(api, metadata, answer, model, Path(os.environ["RESULT_FILE"]).resolve())
     elif operation == "pr-metadata":
         result = pr_metadata(api, os.environ["REPOSITORY"], os.environ["PR_NUMBER"])
     elif operation == "pr-status":
