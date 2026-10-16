@@ -32,3 +32,16 @@ clones use AtomGit HTTPS URLs without adding platform tokens to clone commands.
 - AtomGit Issue context and publication are separate actions; neither chooses a fixed model.
 - Python requirements exclude nothing by default; project-specific exclusions are caller inputs.
 - Release assets are arbitrary files; project wheel validation belongs in the caller.
+
+### Consume one AI execution result / 消费同一次 AI 执行结果
+
+For TRAE replies, pass `stage-result: ${{ steps.ai.outputs.result-directory }}` to
+`atomgit-issue-comment`. The stage reads `response.md` and `result.json` together,
+checks successful execution, and derives attribution from `requested_model`.
+Do not also pass `body-file` or `model`. An empty requested model means no model
+attribution; it does not identify the account's effective default model.
+Existing non-TRAE callers may continue using `body-file` and optional `model`.
+
+TRAE 回复只传 `stage-result`（模型步骤的 `result-directory`）。正文和署名来自同一次
+执行记录，发布时不再重复选择模型。若使用账号默认模型而没有明确模型 ID，则不猜测署名。
+旧的非 TRAE 调用仍可使用 `body-file` 和可选 `model`；两种方式不可混用。
