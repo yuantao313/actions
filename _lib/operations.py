@@ -195,10 +195,10 @@ def release(api, repo, tag, name, body, assets):
     if existing is None:
         api.request("POST", root + "/releases", {"tag_name": tag, "name": name or tag, "body": body or ""}, "json")
     elif name or body is not None:
-        fields = {"name": name or existing.get("name", tag)}
-        if body is not None:
-            fields["body"] = body
-        api.request("PATCH", f"{root}/releases/{existing['id']}", fields, "json")
+        # AtomGit identifies releases by tag and requires both name and body.
+        fields = {"name": name or existing.get("name", tag),
+                  "body": body if body is not None else existing.get("body", "")}
+        api.request("PATCH", f"{root}/releases/{quoted}", fields, "json")
     for path in paths:
         info = api.request("GET", f"{root}/releases/{quoted}/upload_url?" + urllib.parse.urlencode({"file_name": path.name}))
         url, headers = info.get("url"), info.get("headers")

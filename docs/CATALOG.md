@@ -32,6 +32,7 @@ clones use AtomGit HTTPS URLs without adding platform tokens to clone commands.
 - AtomGit Issue context and publication are separate actions; neither chooses a fixed model.
 - Python requirements exclude nothing by default; project-specific exclusions are caller inputs.
 - Release assets are arbitrary files; project wheel validation belongs in the caller.
+- Release updates use the URL-encoded tag, as required by AtomGit, and preserve existing notes when no body file is supplied. Release responses need no numeric ID.
 
 ### Consume one AI execution result / 消费同一次 AI 执行结果
 

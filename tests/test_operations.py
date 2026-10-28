@@ -122,14 +122,29 @@ class OperationTests(unittest.TestCase):
         class API:
             def __init__(self):
                 self.patch = None
+                self.patch_path = None
             def request(self, method, path, body=None, encoding="form"):
                 if method == "PATCH":
                     self.patch = body
+                    self.patch_path = path
                     return {}
-                return {"id": 10, "name": "old", "body": "existing notes", "assets": []}
+                return {"tag_name": "v1.0.0", "name": "old", "body": "existing notes", "assets": []}
         api = API()
         op.release(api, "example/project", "v1.0.0", "new name", None, [])
-        self.assertEqual(api.patch, {"name": "new name"})
+        self.assertEqual(api.patch, {"name": "new name", "body": "existing notes"})
+        self.assertEqual(api.patch_path, "/repos/example/project/releases/v1.0.0")
+
+    def test_release_update_uses_encoded_tag_without_a_release_id(self):
+        writes = []
+        class API:
+            def request(self, method, path, body=None, encoding="form"):
+                if method == "PATCH":
+                    writes.append((path, body, encoding))
+                    return {}
+                return {"tag_name": "release/v1", "name": "old", "body": "old notes", "assets": []}
+        op.release(API(), "example/project", "release/v1", "new", "new notes", [])
+        self.assertEqual(writes, [("/repos/example/project/releases/release%2Fv1",
+                                  {"name": "new", "body": "new notes"}, "json")])
 
     def test_invalid_status_comment_id_does_not_change_labels(self):
         api = FakeAPI()
